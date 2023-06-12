@@ -26,11 +26,20 @@ async function run() {
     await client.connect();
 
     const classCollection = client.db('summerCamp').collection('classCollections')
+    const userCollection = client.db('summerCamp').collection('userCollection')
 
+    // users
+    app.post('/users', async(req, res)=>{
+        const user = req.body
+        console.log(user);
+        const result = await userCollection.insertOne(user)
+        res.send(result)
+      })
 
     // class collection
     app.get('/classes', async(req, res)=>{
-        const result= await classCollection.find().toArray()
+        const query = {status : 'approved'}
+        const result= await classCollection.find(query).toArray()
         if(!result){
             res.status(401).send({error : true, message : 'not found'})
         }
