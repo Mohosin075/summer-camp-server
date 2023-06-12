@@ -50,6 +50,15 @@ async function run() {
       res.send(result);
     });
 
+    // popular class
+    app.get('/polularClass', async(req, res)=>{
+      const result = await classCollection.find().sort({ enrolled: -1 }).limit(6).toArray();
+      if(!result){
+        return res.send({message : 'data not found'})
+      }
+      res.send(result)
+    })
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
