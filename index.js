@@ -12,6 +12,7 @@ app.use(express.json());
 
 const verifyJWT = (req, res, next) => {
   const authorization = req.headers.authorization;
+  console.log(authorization);
   if (!authorization) {
     return res.status(401).send({ message: "unauthorize access" });
   }
@@ -20,8 +21,8 @@ const verifyJWT = (req, res, next) => {
     if (err) {
       return res.status(401).send({ message: "unauthorize access" });
     }
+    req.decoded = decoded;
   });
-  req.decoded = decoded;
   next();
 };
 
@@ -45,6 +46,7 @@ async function run() {
       .db("summerCamp")
       .collection("classCollections");
     const userCollection = client.db("summerCamp").collection("userCollection");
+    const selectCollection = client.db("summerCamp").collection("selectCollection");
 
     // jwt
 
@@ -57,11 +59,11 @@ async function run() {
     });
 
     // users
-    app.get("/user", async (req, res) => {
+    app.get("/user",  async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
-    app.post("/users", async (req, res) => {
+    app.post("/users",  async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
       const existing = await userCollection.findOne(query);
@@ -73,9 +75,18 @@ async function run() {
     });
 
     // class collection
-    app.get("/classes", async (req, res) => {
-      // const query = { status: "approved" };
+    app.get("/allClasses", async (req, res) => {
       const result = await classCollection.find().toArray();
+      if (!result) {
+        res.status(401).send({ error: true, message: "not found" });
+      }
+      res.send(result);
+    });
+
+    // approve class
+    app.get("/classes", async (req, res) => {
+      const query = { status: "approved" };
+      const result = await classCollection.find(query).toArray();
       if (!result) {
         res.status(401).send({ error: true, message: "not found" });
       }
@@ -96,7 +107,7 @@ async function run() {
     });
 
     // add a class
-    app.post("addClass", async (req, res) => {
+    app.post("/addClass", async (req, res) => {
       const data = req.body;
       if (!data) {
         return res.send({ message: "data not found" });
@@ -120,6 +131,29 @@ async function run() {
       const result = await userCollection.find(query).limit(6).toArray();
       res.send(result);
     });
+
+
+    // select Collection
+    app.get('/select/:email', async(req, res)=>{
+      const query = {studentEmail : req.params.email}
+      const result = await selectCollection.find(query).toArray();
+      res.send(result)
+    })
+
+    app.post('/select/:id', async(req, res)=>{
+      const id = req.params.id 
+      const data = req.body;
+      if(!id || !data){
+        return res.status(401).send({message : 'not found'})
+      }
+      const query = {_id : new ObjectId(id)}
+      const findElement = await classCollection.findOne(query);
+      findElement.studentEmail = data.studentEmail
+      const result = await selectCollection.insertOne(findElement)
+      res.send(result)
+    })
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
