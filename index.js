@@ -29,6 +29,10 @@ async function run() {
     const userCollection = client.db("summerCamp").collection("userCollection");
 
     // users
+    app.get('/user', async(req, res)=>{
+      const result = await userCollection.find().toArray()
+      res.send(result)
+    })
     app.post("/users", async (req, res) => {
       const user = req.body;
       const query = {email : user.email}
@@ -42,8 +46,8 @@ async function run() {
 
     // class collection
     app.get("/classes", async (req, res) => {
-      const query = { status: "approved" };
-      const result = await classCollection.find(query).toArray();
+      // const query = { status: "approved" };
+      const result = await classCollection.find().toArray();
       if (!result) {
         res.status(401).send({ error: true, message: "not found" });
       }
@@ -56,6 +60,16 @@ async function run() {
       if(!result){
         return res.send({message : 'data not found'})
       }
+      res.send(result)
+    })
+
+    // add a class
+    app.post('addClass', async(req, res)=>{
+      const data = req.body
+      if(!data){
+        return res.send({message : 'data not found'})
+      }
+      const result= await classCollection.insertOne(data)
       res.send(result)
     })
 
