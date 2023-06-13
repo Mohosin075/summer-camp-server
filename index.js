@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 const port = process.env.POST || 5000;
 
@@ -59,6 +59,22 @@ async function run() {
       res.send(result)
     })
 
+//  instructor 
+
+app.get('/instructor', async(req, res)=>{
+  const query = {role : 'instructor'}
+  const result = await userCollection.find(query).toArray();
+  res.send(result)
+})
+
+
+// popular intructor
+
+app.get('/popularInstructor', async(req, res)=>{
+  const query = {role : 'instructor'}
+  const result = await userCollection.find(query).limit(6).toArray();
+  res.send(result)
+})
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
