@@ -46,7 +46,9 @@ async function run() {
       .db("summerCamp")
       .collection("classCollections");
     const userCollection = client.db("summerCamp").collection("userCollection");
-    const selectCollection = client.db("summerCamp").collection("selectCollection");
+    const selectCollection = client
+      .db("summerCamp")
+      .collection("selectCollection");
 
     // jwt
 
@@ -59,11 +61,11 @@ async function run() {
     });
 
     // users
-    app.get("/user",  async (req, res) => {
+    app.get("/user", async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
-    app.post("/users",  async (req, res) => {
+    app.post("/users", async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
       const existing = await userCollection.findOne(query);
@@ -132,34 +134,44 @@ async function run() {
       res.send(result);
     });
 
-
     // select Collection
-    app.get('/select/:email', async(req, res)=>{
-      const query = {studentEmail : req.params.email}
+    app.get("/select/:email", verifyJWT, async (req, res) => {
+      const query = { studentEmail: req.params.email };
       const result = await selectCollection.find(query).toArray();
-      res.send(result)
-    })
+      res.send(result);
+    });
 
-    app.post('/select/:id', async(req, res)=>{
-      const id = req.params.id 
+    app.post("/select/:id", async (req, res) => {
+      const id = req.params.id;
       const data = req.body;
       if(!id || !data){
         return res.status(401).send({message : 'not found'})
       }
-      const query = {_id : new ObjectId(id)}
-      const findElement = await classCollection.findOne(query);
-      findElement.studentEmail = data.studentEmail
-      const result = await selectCollection.insertOne(findElement)
-      res.send(result)
-    })
+      const query = { _id: new ObjectId(id) };
+      const email = { email: data?.studentEmail };
 
-    app.delete('/selectItemDelete/:id', async(req, res)=>{
-      const id = req.params.id
-      const query = {_id : new ObjectId(id)}
-      const result = await selectCollection.deleteOne(query)
-      res.send(result)
-    })
+      const existing = await selectCollection.findOne(query);
+      if (existing?.studentEmail === email?.email) {
+        return res.send({ message: "already select this course!" });
+      } else {
+        const findElement = await classCollection.findOne(query);
+        findElement
+        .studentEmail = data.studentEmail;
+        delete findElement._id
+        const result = await selectCollection.insertOne(findElement)
+        const newId = { _id: new ObjectId(result?._id) };
+        if(result){
+        res.send(result)
+       }
+      }
+    });
 
+    app.delete("/selectItemDelete/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await selectCollection.deleteOne(query);
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
