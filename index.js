@@ -49,6 +49,9 @@ async function run() {
     const selectCollection = client
       .db("summerCamp")
       .collection("selectCollection");
+    const feadbackCollection = client
+      .db("summerCamp")
+      .collection("feadbackCollection");
 
     // jwt
 
@@ -60,8 +63,22 @@ async function run() {
       res.send({ token });
     });
 
+
+    
+    const verifyAdmin =async(req, res, next)=>{
+      const email = req.decoded.email
+      const query = {email : email}
+      const user = await userCollection.findOne(query)
+      if(user?.role !== 'admin'){
+        return res.status(403).send({error : true, message : 'forbidden access'})
+      }
+      next();
+    
+    }
+
+
     // users
-    app.get("/user", async (req, res) => {
+    app.get("/user", verifyJWT, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
@@ -109,7 +126,7 @@ async function run() {
     });
 
     // add a class
-    app.post("/addClass", async (req, res) => {
+    app.post("/addClass", verifyJWT, async (req, res) => {
       const data = req.body;
       if (!data) {
         return res.send({ message: "data not found" });
@@ -166,7 +183,7 @@ async function run() {
       }
     });
 
-    app.delete("/selectItemDelete/:id", async (req, res) => {
+    app.delete("/selectItemDelete/:id", verifyJWT,  async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await selectCollection.deleteOne(query);
@@ -226,6 +243,14 @@ async function run() {
       };
 
       const result = await classCollection.updateOne(filter, updateDoc)
+      res.send(result)
+    })
+
+    // feadback collection
+
+    app.post('/feadbackCollection', async(req, res)=>{
+      const data = req.body
+      const result = await feadbackCollection.insertOne(data)
       res.send(result)
     })
 
