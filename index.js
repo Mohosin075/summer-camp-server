@@ -202,6 +202,32 @@ async function run() {
       res.send(result)
     })
 
+    // manage classes
+
+    app.patch('/approved/:id', async(req, res)=>{
+      const id = req.params.id 
+      const filter = {_id : new ObjectId(id)}
+      const updateDoc = {
+        $set: {
+          status: 'approved'
+        },
+      };
+
+      const result = await classCollection.updateOne(filter, updateDoc)
+      res.send(result)
+    })
+    app.patch('/denied/:id', async(req, res)=>{
+      const id = req.params.id 
+      const filter = {_id : new ObjectId(id)}
+      const updateDoc = {
+        $set: {
+          status: 'denied'
+        },
+      };
+
+      const result = await classCollection.updateOne(filter, updateDoc)
+      res.send(result)
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
