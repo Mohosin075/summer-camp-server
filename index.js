@@ -58,7 +58,7 @@ async function run() {
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "1h",
+        expiresIn: '1h',
       });
       res.send({ token });
     });
@@ -78,7 +78,7 @@ async function run() {
 
 
     // users
-    app.get("/user", verifyJWT, async (req, res) => {
+    app.get("/user", async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
@@ -92,6 +92,19 @@ async function run() {
       const result = await userCollection.insertOne(user);
       res.send(result);
     });
+
+
+
+    app.get('/users/admin/:email', verifyJWT, async(req, res)=>{
+      const email = req.params.email
+      if(req.decoded.email !== email){
+        return res.send({admin : false})
+      }
+      const query = {email : email}
+      const user = await userCollection.findOne(query)
+      const result = {admin : user?.role === 'admin'}
+      res.send(result)
+    })
 
     // class collection
     app.get("/allClasses", async (req, res) => {
