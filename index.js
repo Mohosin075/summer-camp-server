@@ -94,7 +94,7 @@ async function run() {
     });
 
 
-
+// secure admin
     app.get('/users/admin/:email', verifyJWT, async(req, res)=>{
       const email = req.params.email
       if(req.decoded.email !== email){
@@ -103,6 +103,17 @@ async function run() {
       const query = {email : email}
       const user = await userCollection.findOne(query)
       const result = {admin : user?.role === 'admin'}
+      res.send(result)
+    })
+// secure instructor
+    app.get('/users/instructor/:email', verifyJWT, async(req, res)=>{
+      const email = req.params.email
+      if(req.decoded.email !== email){
+        return res.send({admin : false})
+      }
+      const query = {email : email}
+      const user = await userCollection.findOne(query)
+      const result = {admin : user?.role === 'instructor'}
       res.send(result)
     })
 
