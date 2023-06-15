@@ -57,8 +57,10 @@ async function run() {
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
+      const expiresInMonths = 2;
+      const expiresInDays = expiresInMonths * 30; 
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: '1h',
+        expiresIn: `${expiresInDays}d`
       });
       res.send({ token });
     });
@@ -70,6 +72,16 @@ async function run() {
       const query = {email : email}
       const user = await userCollection.findOne(query)
       if(user?.role !== 'admin'){
+        return res.status(403).send({error : true, message : 'forbidden access'})
+      }
+      next();
+    
+    }
+    const verifyInstructor =async(req, res, next)=>{
+      const email = req.decoded.email
+      const query = {email : email}
+      const user = await userCollection.findOne(query)
+      if(user?.role !== 'instructor'){
         return res.status(403).send({error : true, message : 'forbidden access'})
       }
       next();
@@ -150,7 +162,7 @@ async function run() {
     });
 
     // add a class
-    app.post("/addClass", verifyJWT, async (req, res) => {
+    app.post("/addClass", verifyJWT,verifyInstructor, async (req, res) => {
       const data = req.body;
       if (!data) {
         return res.send({ message: "data not found" });
@@ -217,7 +229,7 @@ async function run() {
 
     // update user role
 // make instructor
-    app.patch(`/makeInstructor/:id`, async(req, res)=>{
+    app.patch(`/makeInstructor/:id`,  verifyJWT, verifyAdmin, async(req, res)=>{
       const id = req.params.id 
       const filter = {_id : new ObjectId(id)}
       const updateDoc = {
@@ -230,7 +242,7 @@ async function run() {
       res.send(result)
     })
 // make admin
-    app.patch(`/makeAdmin/:id`, async(req, res)=>{
+    app.patch(`/makeAdmin/:id`, verifyJWT, verifyAdmin, async(req, res)=>{
       const id = req.params.id 
       const filter = {_id : new ObjectId(id)}
       const updateDoc = {
@@ -245,7 +257,7 @@ async function run() {
 
     // manage classes
 
-    app.patch('/approved/:id', async(req, res)=>{
+    app.patch('/approved/:id', verifyJWT, verifyAdmin, async(req, res)=>{
       const id = req.params.id 
       const filter = {_id : new ObjectId(id)}
       const updateDoc = {
@@ -257,7 +269,7 @@ async function run() {
       const result = await classCollection.updateOne(filter, updateDoc)
       res.send(result)
     })
-    app.patch('/denied/:id', async(req, res)=>{
+    app.patch('/denied/:id', verifyJWT, verifyAdmin, async(req, res)=>{
       const id = req.params.id 
       const filter = {_id : new ObjectId(id)}
       const updateDoc = {
