@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 require("dotenv").config();
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY);
 const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
@@ -52,6 +53,9 @@ async function run() {
     const feadbackCollection = client
       .db("summerCamp")
       .collection("feadbackCollection");
+    const paymentCollection = client
+      .db("summerCamp")
+      .collection("paymentCollection");
 
     // jwt
 
@@ -278,6 +282,22 @@ async function run() {
         },
       };
 
+
+      // create payment 
+      app.post('/create-payment-intent', async(req, res)=>{
+        const {price} = req.body 
+        const ammount = price*100
+        const paymentIntent = await stripe.paymentIntents.create({
+          ammount : ammount, 
+          currency : 'usd',
+          payment_method_types : ['card']
+        });
+        res.send({
+          clientSecret : paymentIntent.client.secret
+        })
+
+      })
+
       const result = await classCollection.updateOne(filter, updateDoc)
       res.send(result)
     })
@@ -287,6 +307,15 @@ async function run() {
     app.post('/feadbackCollection', async(req, res)=>{
       const data = req.body
       const result = await feadbackCollection.insertOne(data)
+      res.send(result)
+    })
+
+    // payment
+
+    app.post('/payment', async(req, res)=>{
+      const payment = req.body
+      console.log(payment);
+      const result = await paymentCollection.insertOne(payment)
       res.send(result)
     })
 
