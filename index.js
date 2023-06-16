@@ -41,7 +41,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const classCollection = client
       .db("summerCamp")
@@ -56,6 +56,9 @@ async function run() {
     const paymentCollection = client
       .db("summerCamp")
       .collection("paymentCollection");
+    const tipsCollection = client
+      .db("summerCamp")
+      .collection("tipsCollection");
 
     // jwt
 
@@ -130,6 +133,13 @@ async function run() {
       const query = {email : email}
       const user = await userCollection.findOne(query)
       const result = {admin : user?.role === 'instructor'}
+      res.send(result)
+    })
+
+    // tips data get
+
+    app.get('/tips', async(req, res)=>{
+      const result = await tipsCollection.find().toArray()
       res.send(result)
     })
 
