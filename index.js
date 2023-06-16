@@ -224,6 +224,7 @@ async function run() {
         const findElement = await classCollection.findOne(query);
         findElement
         .studentEmail = data.studentEmail;
+        findElement.paymentStatus = 'pending'
         delete findElement._id
         const result = await selectCollection.insertOne(findElement)
         const newId = { _id: new ObjectId(result?._id) };
@@ -326,6 +327,21 @@ async function run() {
       const payment = req.body
       console.log(payment);
       const result = await paymentCollection.insertOne(payment)
+      res.send(result)
+    })
+
+
+    app.patch('/paymentSuccess/:id', async(req, res)=>{
+      const id = req.params.id
+      console.log(id);
+      const filter = {_id : new ObjectId(id)}
+
+      const updateDoc = {
+        $set: {
+          paymentStatus: 'success'
+        },
+      };
+      const result = await selectCollection.updateOne(filter, updateDoc)
       res.send(result)
     })
 
