@@ -225,7 +225,6 @@ async function run() {
         findElement
         .studentEmail = data.studentEmail;
         findElement.paymentStatus = 'pending'
-        delete findElement._id
         const result = await selectCollection.insertOne(findElement)
         const newId = { _id: new ObjectId(result?._id) };
         if(result){
@@ -323,6 +322,15 @@ async function run() {
 
     // payment
 
+    // payment history
+
+    app.get('/paymentHistory/:email', async(req, res)=>{
+      const email = req.params.email
+      const query = {email : email}
+      const result = await paymentCollection.find(query).sort({ date: -1 }).toArray()
+      res.send(result)
+    })
+
     app.post('/payment', async(req, res)=>{
       const payment = req.body
       console.log(payment);
@@ -336,9 +344,11 @@ async function run() {
       console.log(id);
       const filter = {_id : new ObjectId(id)}
 
+      const findElement = await  selectCollection.findOne(filter)
       const updateDoc = {
         $set: {
-          paymentStatus: 'success'
+          paymentStatus: 'success',
+          seats : findElement.seats - 1
         },
       };
       const result = await selectCollection.updateOne(filter, updateDoc)
