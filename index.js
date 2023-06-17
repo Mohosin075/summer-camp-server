@@ -208,7 +208,7 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/select/:id", async (req, res) => {
+    app.post("/select/:id", async(req, res) => {
       const id = req.params.id;
       const data = req.body;
       if(!id || !data){
@@ -225,6 +225,7 @@ async function run() {
         findElement
         .studentEmail = data.studentEmail;
         findElement.paymentStatus = 'pending'
+        delete findElement._id
         const result = await selectCollection.insertOne(findElement)
         const newId = { _id: new ObjectId(result?._id) };
         if(result){
