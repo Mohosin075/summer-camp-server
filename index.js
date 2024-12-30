@@ -11,6 +11,7 @@ const port = process.env.POST || 5000;
 app.use(cors());
 app.use(express.json());
 
+// jwt verification
 const verifyJWT = (req, res, next) => {
   const authorization = req.headers.authorization;
   console.log(authorization);
